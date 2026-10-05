@@ -1,0 +1,4 @@
+__pycache__/
+*.db
+report.html
+.DS_Store
