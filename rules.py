@@ -22,8 +22,8 @@ def status(metric, value):
     return "Good" if value <= b["good"] else "Watch" if value <= b["watch"] else "Leak"
 
 
-def findings(db="abc.db"):
-    m = compute(db)
+def findings(engine=None, client="ABC Apparels", batch=None):
+    m = compute(engine, client, batch)
     rows = []
 
     # --- MONEY: margin lost vs quote, per line+style (so one bad style is not

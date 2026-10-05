@@ -22,8 +22,8 @@ AREA_LABEL = {"line_efficiency": "Line efficiency", "fabric_util": "Fabric use",
               "reject_rate": "Rejects"}
 
 
-def build(db="abc.db"):
-    f = findings(db)
+def build(engine=None, client="ABC Apparels", batch=None):
+    f = findings(engine, client, batch)
     money = f[f["money_impact"].notna()].copy()
     causes = f[f["money_impact"].isna()].copy()
 

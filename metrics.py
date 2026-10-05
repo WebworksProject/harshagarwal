@@ -8,18 +8,27 @@ Each row carries the metrics that drive the report:
 Used by rules.py and report.py. Run standalone to eyeball the numbers:
   python3 metrics.py
 """
-import sqlite3
 import pandas as pd
+from sqlalchemy import text
+from db import get_engine, latest_batch
 
 MACHINE_PER_HR = 50   # machine running cost
 OVERHEAD_PP = 40      # fixed factory overhead per garment
 
 
-def compute(db="abc.db"):
-    con = sqlite3.connect(db)
-    t = {n: pd.read_sql(f"select * from {n}", con) for n in
+def compute(engine=None, client="ABC Apparels", batch=None):
+    engine = engine or get_engine()
+    batch = batch or latest_batch(engine, client)
+    if batch is None:
+        raise SystemExit(f"no saved data for client '{client}'")
+
+    def read(name):
+        q = text(f"select * from {name} where client_name=:c and batch_id=:b")
+        df = pd.read_sql(q, engine, params={"c": client, "b": batch})
+        return df.drop(columns=["client_name", "batch_id"])  # constant within a batch
+
+    t = {n: read(n) for n in
          ("orders", "production", "material", "labour", "quality", "utilities")}
-    con.close()
 
     # base grain = production (month, line, style)
     df = t["production"].merge(
@@ -63,7 +72,5 @@ def compute(db="abc.db"):
 
 
 if __name__ == "__main__":
-    import pandas as pd
     pd.set_option("display.width", 200, "display.max_columns", 30)
-    m = compute()
-    print(m.to_string(index=False))
+    print(compute().to_string(index=False))
